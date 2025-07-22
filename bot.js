@@ -41,7 +41,7 @@ client.on(Events.InteractionCreate, async interaction => {
   if (commandName === 'temp') {
     const id = interaction.options.getString('id'); // the city name
     try {
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=73f05e21bd85c138fc40be24fb9e8e1e`);
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=`); // I removed the API key
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const data = await res.json();
       const temp = data.main.temp; // stores temperature
