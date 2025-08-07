@@ -18,7 +18,17 @@ async function registerCommands() {
         option.setName('id')
           .setDescription('Enter a location')
           .setRequired(true)
-      ),
+      )
+      .addStringOption(option =>
+        option.setName('units')
+          .setDescription('Celsius? Fahrenheit??')
+          .setRequired(true)
+          .addChoices(
+              { name: 'Celsius', value: 'metric'},
+              { name: 'Fahrenheit', value: 'imperial'}
+      )
+    )
+        
   ].map(cmd => cmd.toJSON());
 
   try {
@@ -35,11 +45,18 @@ client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;
-
+  let unit
   if (commandName === 'temp') {
     const id = interaction.options.getString('id'); // location name
+    const units = interaction.options.getString('units');
+    if (units === 'metric') {
+      unit = '°C'
+    } else {
+      unit = '°F'
+    }
+
     try {
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=`); // I removed the API key
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${units}&appid=`); // I removed the API key
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const data = await res.json();
       const temp = data.main.temp; // temperature
@@ -48,14 +65,15 @@ client.on(Events.InteractionCreate, async interaction => {
       const highTemp = data.main.temp_max; // high temperature
       const lowTemp = data.main.temp_min; // low temperature
     
-      await interaction.reply(`## ${city}, ${country} Weather:\nCurrent Temperature: ${temp} °C\nLow: ${lowTemp} °C\nHigh: ${highTemp} °C`);
+      await interaction.reply(`## ${city}, ${country} Weather:\nCurrent Temperature: ${temp} ${unit}\nLow: ${lowTemp} ${unit}\nHigh: ${highTemp} ${unit}`);
       
     } catch (error) {
       console.error(error);
       await interaction.reply('Error: Location not found.');
     }
   }
-});
+}
+);
 
 
   
