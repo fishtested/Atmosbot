@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const highTemp = data.main.temp_max; // high temperature
       const lowTemp = data.main.temp_min; // low temperature
     
-      await interaction.reply(`## ${city}, ${country} Weather:\nCurrent Temperature: ${temp}°C\nLow: ${lowTemp}\nHigh: ${highTemp}`);
+      await interaction.reply(`## ${city}, ${country} Weather:\nCurrent Temperature: ${temp} °C\nLow: ${lowTemp} °C\nHigh: ${highTemp} °C`);
       
     } catch (error) {
       console.error(error);
