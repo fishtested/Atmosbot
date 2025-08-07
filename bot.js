@@ -27,7 +27,25 @@ async function registerCommands() {
               { name: 'Celsius', value: 'metric'},
               { name: 'Fahrenheit', value: 'imperial'}
       )
-    )
+    ),
+    new SlashCommandBuilder()
+      .setName('wind')
+      .setDescription('Gets the current wind information')
+      .addStringOption(option =>
+        option.setName('id')
+          .setDescription('Enter a location')
+          .setRequired(true)
+      )
+      .addStringOption(option =>
+        option.setName('units')
+          .setDescription('km/h? m/s? mph?')
+          .setRequired(true)
+          .addChoices(
+              { name: 'km/h', value: 'km'},
+              { name: 'm/s', value: 'm'},
+              { name: 'mph', value: 'mi'}
+          )
+        )
         
   ].map(cmd => cmd.toJSON());
 
@@ -45,10 +63,11 @@ client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;
-  let unit
+  // temp
   if (commandName === 'temp') {
     const id = interaction.options.getString('id'); // location name
     const units = interaction.options.getString('units');
+    let unit;
     if (units === 'metric') {
       unit = '°C'
     } else {
@@ -56,9 +75,9 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     try {
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${units}&appid=`); // I removed the API key
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      const data = await res.json();
+      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${units}&appid=`); // I removed the API key
+      if (!req.ok) throw new Error(`HTTP error ${req.status}`);
+      const data = await req.json();
       const temp = data.main.temp; // temperature
       const city = data.name; //  location name from API
       const country = data.sys.country; // country
@@ -72,8 +91,49 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.reply('Error: Location not found.');
     }
   }
+
+  // wind
+  if (commandName === 'wind') {
+    const id = interaction.options.getString('id');
+    const units = interaction.options.getString('units');
+    let metOrImp;
+    let windspeed;
+    let unit;
+    if (units === 'km') {
+      unit = 'km/h';
+      metOrImp = 'metric'
+    } else if (units === 'm') {
+      unit = 'm/s';
+      metOrImp = 'metric'
+    } else if (units === 'mi') {
+      unit = 'mph';
+      metOrImp = 'imperial'
+  }
+
+
+  try {
+    const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${metOrImp}&appid=`); // I removed the API key
+    if (!req.ok) throw new Error(`HTTP error ${req.status}`);
+    const data = await req.json();
+    const speed = data.wind.speed;
+    const city = data.name;
+    const country = data.sys.country;
+    const deg = data.wind.deg;
+    if (units === 'km') {
+      windspeed = (speed * 3.6)
+    } else {
+      windspeed = speed
+    }
+
+    await interaction.reply(`## ${city}, ${country} Weather:\nCurrent Wind Speed: ${windspeed} ${unit}\nDirection: ${deg} degrees`);
+    
+  } catch (error) {
+    console.error(error);
+    await interaction.reply('Error: Location not found.');
+  }
 }
-);
+});
+
 
 
   
