@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { token } = require('./config.json');
+const { token, api } = require('./config.json');
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -53,7 +53,15 @@ async function registerCommands() {
         option.setName('id')
           .setDescription('Enter a location')
           .setRequired(true)
-        )
+        ),
+    new SlashCommandBuilder()
+        .setName('sun')
+        .setDescription('Gets the sunrise and sunset times')
+        .addStringOption(option =>
+          option.setName('id')
+            .setDescription('Enter a location')
+            .setRequired(true)
+          )
         
   ].map(cmd => cmd.toJSON());
 
@@ -83,7 +91,7 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
     try {
-      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${units}&appid=`); // I removed the API key
+      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${units}&appid=${api}`);
       if (!req.ok) throw new Error(`HTTP error ${req.status}`);
       const data = await req.json();
       const temp = data.main.temp; // temperature
@@ -121,7 +129,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 
   try {
-    const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${metOrImp}&appid=`);
+    const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${metOrImp}&appid=${api}`);
     if (!req.ok) throw new Error(`HTTP error ${req.status}`);
     const data = await req.json();
     const speed = data.wind.speed;
@@ -143,12 +151,11 @@ client.on(Events.InteractionCreate, async interaction => {
 }
 
   // conditions
-
   if (commandName === 'conditions') {
     const id = interaction.options.getString('id');
 
     try {
-      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=`);
+      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=${api}`);
       if (!req.ok) throw new Error(`HTTP error ${req.status}`);
       const data = await req.json();
       const city = data.name;
@@ -162,10 +169,32 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.reply('Error: Location not found.');
     }
   }
+  
+  // sun
+  if (commandName === 'sun') {
+    const id = interaction.options.getString('id')
+
+    try {
+      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=${api}`);
+      if (!req.ok) throw new Error(`HTTP error ${req.status}`);
+      const data = await req.json();
+      const city = data.name;
+      const country = data.sys.country;
+      const sunrisesec = new Date(data.sys.sunrise * 1000);
+      const sunsetsec = new Date(data.sys.sunset * 1000);
+      const sunrise = sunrisesec.toUTCString();
+      const sunset = sunsetsec.toUTCString();
+
+      await interaction.reply(`## ${city}, ${country} Sun:\nSunrise: ${sunrise}\nSunset: ${sunset}`);
+    } catch (error) {
+      console.error(error);
+      await interaction.reply('Error: Location not found.');
+    }
+  }
 });
 
 
 
-  
+
 
 client.login(token);
