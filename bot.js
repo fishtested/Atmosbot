@@ -45,6 +45,14 @@ async function registerCommands() {
               { name: 'm/s', value: 'm'},
               { name: 'mph', value: 'mi'}
           )
+        ),
+    new SlashCommandBuilder()
+      .setName('conditions')
+      .setDescription('Gets the current weather conditions')
+      .addStringOption(option =>
+        option.setName('id')
+          .setDescription('Enter a location')
+          .setRequired(true)
         )
         
   ].map(cmd => cmd.toJSON());
@@ -112,7 +120,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 
   try {
-    const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${metOrImp}&appid=`); // I removed the API key
+    const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${metOrImp}&appid=`);
     if (!req.ok) throw new Error(`HTTP error ${req.status}`);
     const data = await req.json();
     const speed = data.wind.speed;
@@ -132,6 +140,27 @@ client.on(Events.InteractionCreate, async interaction => {
     await interaction.reply('Error: Location not found.');
   }
 }
+
+  // conditions
+
+  if (commandName === 'conditions') {
+    const id = interaction.options.getString('id');
+
+    try {
+      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=metric&appid=`);
+      if (!req.ok) throw new Error(`HTTP error ${req.status}`);
+      const data = await req.json();
+      const city = data.name;
+      const country = data.sys.country;
+      const cond = data.weather[0].main;
+      const condDesc = data.weather[0].description;
+
+      await interaction.reply(`## ${city}, ${country} Weather:\n${cond}\n${condDesc}`);
+    } catch (error) {
+      console.error(error);
+      await interaction.reply('Error: Location not found.');
+    }
+  }
 });
 
 
