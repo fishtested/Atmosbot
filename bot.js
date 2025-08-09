@@ -259,13 +259,11 @@ client.on(Events.InteractionCreate, async interaction => {
       console.error(error);
       await interaction.reply('Error: Location not found.');
     }
-
-      // commands
+  }
+  // commands
   if (commandName === 'commands') {
     await interaction.reply(`## Commands:\n/temp: Gets the current temperature\n/wind: Gets the current wind information\n/conditions: Gets the current weather conditions\n/sun: Gets the sunrise and sunset times.\n/info: Information about Atmosbot\n/commands: List of commands (this!)\n/weather: The weather`)
   }
-  }
-  
 });
 
 client.login(token);
