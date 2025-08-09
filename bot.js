@@ -66,6 +66,9 @@ async function registerCommands() {
       .setName('info')
       .setDescription('Information about Atmosbot'),
     new SlashCommandBuilder()
+      .setName('commands')
+      .setDescription('List of commands'),
+    new SlashCommandBuilder()
       .setName('weather')
       .setDescription('The weather')
       .addStringOption(option =>
@@ -216,6 +219,7 @@ client.on(Events.InteractionCreate, async interaction => {
     await interaction.reply(`Greetings!\nAtmosbot is a Discord.js bot that gets and sends weather data from OpenWeather.\nMy code is publicly available on GitHub!\nBugs? Issues? Suggestions? Please submit a GitHub issue.`)
   }
 
+  // weather
   if (commandName === 'weather') {
     const id = interaction.options.getString('id')
     const units = interaction.options.getString('units');
@@ -255,6 +259,11 @@ client.on(Events.InteractionCreate, async interaction => {
       console.error(error);
       await interaction.reply('Error: Location not found.');
     }
+
+      // commands
+  if (commandName === 'commands') {
+    await interaction.reply(`## Commands:\n/temp: Gets the current temperature\n/wind: Gets the current wind information\n/conditions: Gets the current weather conditions\n/sun: Gets the sunrise and sunset times.\n/info: Information about Atmosbot\n/commands: List of commands (this!)\n/weather: The weather`)
+  }
   }
   
 });
