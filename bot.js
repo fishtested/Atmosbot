@@ -61,8 +61,27 @@ async function registerCommands() {
           option.setName('id')
             .setDescription('Enter a location')
             .setRequired(true)
+          ),
+    new SlashCommandBuilder()
+      .setName('info')
+      .setDescription('Information about Atmosbot'),
+    new SlashCommandBuilder()
+      .setName('weather')
+      .setDescription('The weather')
+      .addStringOption(option =>
+        option.setName('id')
+          .setDescription('Enter a location')
+          .setRequired(true)
+      )
+      .addStringOption(option =>
+        option.setName('units')
+          .setDescription('Celsius? Fahrenheit??')
+          .setRequired(true)
+          .addChoices(
+              { name: 'Celsius', value: 'metric'},
+              { name: 'Fahrenheit', value: 'imperial'}
           )
-        
+      )
   ].map(cmd => cmd.toJSON());
 
   try {
@@ -191,10 +210,53 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.reply('Error: Location not found.');
     }
   }
+
+  // info
+  if (commandName === 'info') {
+    await interaction.reply(`Greetings!\nAtmosbot is a Discord.js bot that gets and sends weather data from OpenWeather.\nMy code is publicly available on GitHub!\nBugs? Issues? Suggestions? Please submit a GitHub issue.`)
+  }
+
+  if (commandName === 'weather') {
+    const id = interaction.options.getString('id')
+    const units = interaction.options.getString('units');
+    let unit;
+    let speedunit;
+    if (units === 'metric') {
+      unit = '°C'
+      speedunit = 'm/s'
+    } else {
+      unit = '°F'
+      speedunit = 'mph'
+    }
+
+    try {
+      const req = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${id}&units=${units}&appid=${api}`);
+      if (!req.ok) throw new Error(`HTTP error ${req.status}`);
+      const data = await req.json();
+      const temp = data.main.temp;
+      const city = data.name;
+      const country = data.sys.country;
+      const cond = data.weather[0].main;
+      const condDesc = data.weather[0].description;
+      const highTemp = data.main.temp_max;
+      const lowTemp = data.main.temp_min;
+      const feelsLike = data.main.feels_like
+      const speed = data.wind.speed;
+      const deg = data.wind.deg;
+      const sunrisesec = new Date(data.sys.sunrise * 1000);
+      const sunsetsec = new Date(data.sys.sunset * 1000);
+      const sunrise = sunrisesec.toUTCString();
+      const sunset = sunsetsec.toUTCString();
+      
+    
+      await interaction.reply(`## ${city}, ${country} Weather:\n### Conditions\n${cond}\n${condDesc}\n### Temperature\nCurrent: ${temp} ${unit}\nFeels like: ${feelsLike} ${unit}\nLow: ${lowTemp} ${unit}\nHigh: ${highTemp} ${unit}\n### Wind\nSpeed: ${speed} ${speedunit}\nDirection: ${deg} degrees\n### Sun\nSunrise: ${sunrise}\nSunset: ${sunset}`);
+      
+    } catch (error) {
+      console.error(error);
+      await interaction.reply('Error: Location not found.');
+    }
+  }
+  
 });
-
-
-
-
 
 client.login(token);
